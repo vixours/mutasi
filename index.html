@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Kalkulator Permutasi & Kombinasi — Kompleks</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="page-header">
+      <h1>Kalkulator Permutasi & Kombinasi (Kompleks)</h1>
+
+      <a href="/" title="Beranda" class="logo-link">
+        <img id="site-logo" class="site-logo" src="tif1.png" alt="Logo" />
+      </a>
+    </header>
+
+    <section class="controls">
+      <fieldset>
+        <legend>Masukkan soal (bahasa alami)</legend>
+        <label for="problem-text" style="display:block;color:var(--muted)">
+          Ketik soal permutasi/kombinasi (mis. "Dari 8 siswa pilih 3, berapa cara tanpa urutan?")</label>
+        <textarea id="problem-text" rows="3" style="width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:var(--glass);color:var(--text);"></textarea>
+
+        <div class="examples">
+          <strong>Uji cepat:</strong>
+          <button class="example-btn" data-example="Dari 8 siswa pilih 3, berapa cara tanpa urutan?">8 pilih 3 (kombinasi)</button>
+          <button class="example-btn" data-example="Berapa susunan 5 huruf jika urutan penting?">5 huruf (permutasi)</button>
+          <button class="example-btn" data-example="Berapa cara menyusun 4 orang melingkar?">4 orang melingkar (sirkular)</button>
+          <button class="example-btn" data-example="Berapa permutasi dengan pengulangan jika ada 3 huruf dan pilih 2 (boleh sama)?">pengulangan</button>
+          <button class="example-btn" data-example="Tentukan jumlah permutasi untuk objek tak dibedakan: 3 objek dengan tipe 2 dan 1">multinomial (n=3, 2,1)</button>
+        </div>
+
+        <div style="margin-top:8px;display:flex;gap:8px">
+          <button id="btn-analyze">Analisis Soal</button>
+          <button id="btn-analyze-calc">Analisis & Hitung</button>
+          <button id="btn-clear-analysis" type="button" class="muted">Bersihkan Analisis</button>
+        </div>
+        <div id="analysis-output" class="card mono hidden" style="margin-top:8px"></div>
+      </fieldset>
+
+      <div class="row">
+        <label>
+          n (jumlah elemen)
+          <input id="input-n" type="number" min="0" step="1" value="5" />
+        </label>
+
+        <label>
+          r (jumlah pemilihan)
+          <input id="input-r" type="number" min="0" step="1" value="3" />
+        </label>
+      </div>
+
+      <fieldset>
+        <legend>Jenis perhitungan</legend>
+        <label><input type="radio" name="mode" value="nPr" checked /> Permutasi (nPr)</label>
+        <label><input type="radio" name="mode" value="nCr" /> Kombinasi (nCr)</label>
+        <label><input type="radio" name="mode" value="repetition_permutation" /> Permutasi dengan pengulangan (n^r)</label>
+        <label><input type="radio" name="mode" value="repetition_combination" /> Kombinasi dengan pengulangan (C(n+r-1, r))</label>
+        <label><input type="radio" name="mode" value="circular" /> Permutasi sirkular ((n-1)!)</label>
+        <label><input type="radio" name="mode" value="multinomial" /> Permutasi dengan objek tak dibedakan (multinomial)</label>
+      </fieldset>
+
+      <div id="multinomial-controls" class="hidden">
+        <label>
+          Masukkan jumlah tiap tipe (dipisah koma). Contoh: 2,2,1  → total harus = n
+          <input id="multinomial-counts" type="text" placeholder="2,2,1" />
+        </label>
+      </div>
+
+      <div class="options">
+        <label><input id="list-results" type="checkbox" /> Tampilkan daftar hasil (batas 5000 item)</label>
+        <label>Daftar elemen (dipisah koma). Contoh: A,B,C,D,E
+          <input id="elements-list" type="text" placeholder="A,B,C,D,E" />
+        </label>
+        <label>
+          Batas tampilan daftar
+          <input id="list-limit" type="number" min="1" step="1" value="200" />
+        </label>
+      </div>
+
+      <div class="actions">
+        <button id="btn-calc">Hitung</button>
+        <button id="btn-clear">Bersihkan</button>
+      </div>
+    </section>
+
+    <section class="results">
+      <h2>Hasil</h2>
+      <div id="output-summary" class="card"></div>
+      <div id="output-steps" class="card mono"></div>
+      <div id="output-list" class="card"></div>
+    </section>
+
+    <footer>
+      <small>Dibuat: Kalkulator kombinatorik dengan BigInt, pembatalan faktorial, dan opsi listing. Batasi listing untuk mencegah browser freeze.</small>
+    </footer>
+      <small>© 2025 - Materi Permutasi & Kombinasi | UNIVERSITAS TRUNOJOYO MADURA</small>
+  </footer>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

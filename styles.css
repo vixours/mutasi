@@ -1,0 +1,151 @@
+:root{
+  --bg:#0f1724;
+  --card:#0b1220;
+  --accent:#4f46e5;
+  --muted:#94a3b8;
+  --text:#e6eef8;
+  --danger:#ef4444;
+  --glass: rgba(255,255,255,0.03);
+  --highlight: rgba(79,70,229,0.14);
+  --highlight-num: rgba(16,185,129,0.12);
+  --highlight-multi: rgba(234,88,12,0.12);
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: linear-gradient(180deg,#071027 0%, #071a2a 100%);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  padding:24px;
+}
+
+.container{
+  max-width:980px;
+  margin:0 auto;
+  position: relative; /* penting untuk posisi logo absolut di dalam header */
+}
+
+/* Wrapper header: memberi ruang dan referensi posisi untuk logo */
+.page-header{
+  position: relative;
+  padding: 8px 0 12px 0;
+}
+
+/* Judul: tampil di tengah dengan border, padding, dan border-radius */
+h1{
+  margin: 0 auto;
+  font-size:1.4rem;
+  padding:8px 14px;
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:10px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0));
+  box-shadow: 0 6px 18px rgba(2,6,23,0.6);
+  text-align:center;
+  display: inline-block; /* agar width pas isi dan margin auto tetap bekerja */
+}
+
+/* Logo di pojok kanan atas header, sejajar vertikal dengan heading */
+.site-logo{
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.02);
+  box-shadow: 0 4px 14px rgba(2,6,23,0.5);
+  display: block;
+  z-index: 40;
+}
+
+/* link pembungkus logo tidak menampilkan outline yang mengganggu */
+.logo-link { display:block; line-height:0; }
+.logo-link:focus { outline: 2px solid rgba(79,70,229,0.3); outline-offset: 2px; border-radius: 8px; }
+
+/* Responsif: tampilkan logo di mobile dengan ukuran lebih kecil dan beri ruang atas agar tidak menutupi UI */
+@media (max-width:520px){
+  .site-logo{
+    width: 36px;             /* lebih kecil supaya tidak mengganggu */
+    height: 36px;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-radius: 6px;
+  }
+
+  /* Beri ruang tambahan di atas container sehingga logo tidak menutupi judul / kontrol */
+  .container{
+    padding-top: 8px;
+  }
+
+  /* Sedikit sesuaikan ukuran judul agar muat rapi */
+  h1{
+    padding:6px 10px;
+    font-size:1.25rem;
+  }
+}
+
+.controls{background:var(--card);padding:16px;border-radius:10px;margin-bottom:18px;box-shadow:0 5px 30px rgba(3,7,18,.6)}
+.row{display:flex;gap:12px;margin-bottom:12px}
+label{display:block;font-size:0.9rem;color:var(--muted)}
+input[type="number"], input[type="text"], textarea{
+  display:block;
+  width:100%;
+  padding:8px 10px;
+  margin-top:6px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,0.06);
+  background:var(--glass);
+  color:var(--text);
+}
+
+fieldset{border:1px solid rgba(255,255,255,0.04);padding:8px;border-radius:8px;margin:12px 0;display:flex;flex-wrap:wrap;gap:8px}
+fieldset label{display:inline-flex;align-items:center;gap:8px;padding:4px 8px;background:transparent;border-radius:6px}
+.options{margin:12px 0;display:grid;gap:8px}
+
+.actions{display:flex;gap:8px;margin-top:8px}
+button{
+  background:linear-gradient(90deg,var(--accent),#2563eb);
+  color:white;padding:10px 14px;border-radius:8px;border:0;cursor:pointer;font-weight:600;
+}
+button.muted{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);font-weight:500}
+button.example-btn{background:transparent;border:1px dashed rgba(255,255,255,0.06);color:var(--muted);padding:6px 8px;border-radius:6px;font-weight:600;cursor:pointer}
+
+.results h2{margin:4px 0 8px 0}
+.card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:12px;border-radius:10px;margin-bottom:12px;border:1px solid rgba(255,255,255,0.02)}
+.mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace; font-size:0.95rem; white-space:pre-wrap}
+.hidden{display:none}
+
+footer{color:var(--muted);font-size:0.85rem;margin-top:6px}
+.output-badge{display:inline-block;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.03);margin-right:8px}
+.bad{color:var(--danger)}
+.small{font-size:0.9rem;color:var(--muted)}
+
+/* Highlight styles for analysis */
+.highlight{padding:2px 4px;border-radius:4px}
+.highlight.permutation{background: linear-gradient(90deg, rgba(79,70,229,0.12), rgba(79,70,229,0.06)); border:1px solid rgba(79,70,229,0.08);}
+.highlight.combination{background: linear-gradient(90deg, rgba(16,185,129,0.08), rgba(16,185,129,0.04)); border:1px solid rgba(16,185,129,0.06);}
+.highlight.repetition{background: linear-gradient(90deg, rgba(234,179,8,0.08), rgba(234,179,8,0.04)); border:1px solid rgba(234,179,8,0.06);}
+.highlight.number{background: var(--highlight-num); border:1px solid rgba(16,185,129,0.12);}
+.highlight, .highlight.multinomial-seq, .highlight.multinomial{background: var(--highlight-multi); border:1px solid rgba(234,88,12,0.14);}
+
+/* analysis layout */
+.analysis-top{display:flex;gap:12px;align-items:start;flex-wrap:wrap}
+.analysis-text{flex:1;min-width:220px}
+.confidence-bubble{background:rgba(255,255,255,0.02);padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);color:var(--muted)}
+.confidence-bubble .conf-label{display:block;margin-top:4px;color:var(--muted);font-size:0.85rem}
+
+/* reasons list */
+.analysis-reasons{margin-top:10px;color:var(--muted)}
+.analysis-reasons ul{margin:6px 0 0 18px}
+.note{margin-top:6px;color:var(--muted);font-size:0.9rem}
+
+/* examples wrapper */
+.examples{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;margin-bottom:6px;color:var(--muted)}
