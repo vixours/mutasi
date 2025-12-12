@@ -8,17 +8,20 @@
 </head>
 <body>
   <main class="container">
+    <!-- Header: bungkus judul dan logo sehingga bisa disejajarkan -->
     <header class="page-header">
       <h1>Kalkulator Permutasi & Kombinasi (Kompleks)</h1>
-  <main>
+
+      <!-- Logo: letakkan file logo.png di folder proyek atau ubah atribut src sesuai lokasi -->
       <a href="/" title="Beranda" class="logo-link">
         <img id="site-logo" class="site-logo" src="tif1.png" alt="Logo" />
       </a>
     </header>
 
+    <!-- Natural language input: tempat user mengetik soal untuk dianalisis -->
     <section class="controls">
       <fieldset>
-          <header>📘 Permutasi dan Kombinasi</header>
+                  <header>📘 Permutasi dan Kombinasi</header>
 
   <main>
     <h2>1️⃣ Pengertian Permutasi</h2>
@@ -40,7 +43,6 @@
       nC<sub>r</sub> = <i>n!</i> / (<i>r!</i> × (<i>n</i> − <i>r</i>)!)
     </div>
 
-    </div>
         <legend>Masukkan soal (bahasa alami)</legend>
         <label for="problem-text" style="display:block;color:var(--muted)">
           Ketik soal permutasi/kombinasi (mis. "Dari 8 siswa pilih 3, berapa cara tanpa urutan?")</label>
@@ -52,7 +54,7 @@
           <button class="example-btn" data-example="Berapa susunan 5 huruf jika urutan penting?">5 huruf (permutasi)</button>
           <button class="example-btn" data-example="Berapa cara menyusun 4 orang melingkar?">4 orang melingkar (sirkular)</button>
           <button class="example-btn" data-example="Berapa permutasi dengan pengulangan jika ada 3 huruf dan pilih 2 (boleh sama)?">pengulangan</button>
-          <button class="example-btn" data-example="Tentukan jumlah permutasi untuk objek tak dibedakan: 3 objek dengan tipe 2 dan 1">multinomial (n=3, 2,1)</button>
+          <button class="example-btn" data-example="Tentukan jumlah permutasi untuk objek tak dibedakan: 5 objek dengan tipe 2,2,1">multinomial</button>
         </div>
 
         <div style="margin-top:8px;display:flex;gap:8px">

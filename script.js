@@ -577,27 +577,14 @@
 
     // Map numbers to n and r using priority:
     // 1) explicit "n=" and "r=" patterns
-    // 2) Multinomial (if decided) sets n from sum of counts, r=0
-    // 3) digit numbers (left-to-right)
-    // 4) word numbers (left-to-right, as detected)
+    // 2) digit numbers (left-to-right)
+    // 3) word numbers (left-to-right, as detected)
     let nGuess = null, rGuess = null;
     const nMatch = lower.match(/n\s*[:=]\s*(\d+)/i);
     const rMatch = lower.match(/r\s*[:=]\s*(\d+)/i);
-    
-    // 1) Explicit
     if(nMatch) nGuess = Number(nMatch[1]);
     if(rMatch) rGuess = Number(rMatch[1]);
 
-    // 2) Multinomial override: Sum counts for N in multinomial mode
-    //    Ini adalah perbaikan krusial untuk kasus 'objek tak dibedakan'
-    if(decidedMode === 'multinomial' && multinomialCountsDetected && multinomialCountsDetected.length > 0){
-        const sum = multinomialCountsDetected.reduce((a,b)=>a+b,0);
-        // Hanya override n jika belum diset secara eksplisit
-        if(nGuess === null) nGuess = sum;
-        if(rGuess === null) rGuess = 0;
-    }
-
-    // 3 & 4) Digits/Words fallback (Only if not set by explicit/multinomial)
     const combinedNums = [].concat(digitNums, wordNums);
     if(nGuess === null && combinedNums.length > 0) nGuess = combinedNums[0];
     if(rGuess === null && combinedNums.length > 1) rGuess = combinedNums[1];
@@ -750,11 +737,8 @@
           const raw = multinomialCounts.value.trim();
           if(raw.length === 0){ outSummary.innerHTML = `<div class="bad">Error: Masukkan jumlah tiap tipe (contoh "2,2,1")</div>`; return; }
           const parts = raw.split(',').map(s=>Number(s.trim())).filter(x=>!Number.isNaN(x) && Number.isFinite(x));
-          // VALIDASI KRUSIAL
-          const partsSum = parts.reduce((a,b)=>a+b,0);
-          if(partsSum !== nVal){ outSummary.innerHTML = `<div class="bad">Error: Jumlah bagian (${partsSum}) harus sama dengan n (${nVal})</div>`; return; }
+          if(parts.reduce((a,b)=>a+b,0) !== nVal){ outSummary.innerHTML = `<div class="bad">Error: Jumlah bagian (${parts.reduce((a,b)=>a+b,0)}) harus sama dengan n (${nVal})</div>`; return; }
           if(parts.some(x=>x<0 || Math.floor(x)!==x)){ outSummary.innerHTML = `<div class="bad">Error: Semua bagian harus bilangan bulat >= 0</div>`; return; }
-          
           result = multinomialBig(nVal, parts);
           formula = `Multinomial: n! / (a! b! c! ...) untuk jumlah a,b,c...`;
           steps = `Total n=${nVal}, bagian = [${parts.join(',')}]\nHasil: ${formatBigInt(result)}`;
