@@ -1,130 +1,223 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Kalkulator Permutasi & Kombinasi — Kompleks</title>
-  <link rel="stylesheet" href="styles.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Permutasi & Kombinasi</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <main class="container">
-    <!-- Header: bungkus judul dan logo sehingga bisa disejajarkan -->
-    <header class="page-header">
-      <h1>Kalkulator Permutasi & Kombinasi (Kompleks)</h1>
-
-      <!-- Logo: letakkan file logo.png di folder proyek atau ubah atribut src sesuai lokasi -->
-      <a href="/" title="Beranda" class="logo-link">
+    <div class="container">
+        <header>
+            <h1>Permutasi, Kombinasi & Kalkulator</h1>
+            <a href="/" title="Beranda" class="logo-link">
         <img id="site-logo" class="site-logo" src="tif1.png" alt="Logo" />
-      </a>
+    </a>
+        </header>
     </header>
-
-    <!-- Natural language input: tempat user mengetik soal untuk dianalisis -->
-    <section class="controls">
-      <fieldset>
-                  <header>📘 Permutasi dan Kombinasi</header>
-
-  <main>
-    <h2>1️⃣ Pengertian Permutasi</h2>
-    <p>
-      <strong>Permutasi</strong> adalah susunan atau pengaturan objek yang <em>memperhatikan urutan</em>.
-      Jika terdapat <em>n</em> objek dan diambil sebanyak <em>r</em> secara berurutan, maka rumusnya:
-    </p>
-
-    <div class="rumus">
-      nP<sub>r</sub> = <i>n!</i> / (<i>n</i> − <i>r</i>)!
-    </div>
-        <h2>2️⃣ Pengertian Kombinasi</h2>
-    <p>
-      <strong>Kombinasi</strong> adalah cara memilih objek tanpa memperhatikan urutan.
-      Rumusnya:
-    </p>
-
-    <div class="rumus">
-      nC<sub>r</sub> = <i>n!</i> / (<i>r!</i> × (<i>n</i> − <i>r</i>)!)
-    </div>
-
-        <legend>Masukkan soal (bahasa alami)</legend>
-        <label for="problem-text" style="display:block;color:var(--muted)">
-          Ketik soal permutasi/kombinasi (mis. "Dari 8 siswa pilih 3, berapa cara tanpa urutan?")</label>
-        <textarea id="problem-text" rows="3" style="width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:var(--glass);color:var(--text);"></textarea>
-
-        <div class="examples">
-          <strong>Uji cepat:</strong>
-          <button class="example-btn" data-example="Dari 8 siswa pilih 3, berapa cara tanpa urutan?">8 pilih 3 (kombinasi)</button>
-          <button class="example-btn" data-example="Berapa susunan 5 huruf jika urutan penting?">5 huruf (permutasi)</button>
-          <button class="example-btn" data-example="Berapa cara menyusun 4 orang melingkar?">4 orang melingkar (sirkular)</button>
-          <button class="example-btn" data-example="Berapa permutasi dengan pengulangan jika ada 3 huruf dan pilih 2 (boleh sama)?">pengulangan</button>
-          <button class="example-btn" data-example="Tentukan jumlah permutasi untuk objek tak dibedakan: 5 objek dengan tipe 2,2,1">multinomial</button>
+        <!-- ===== TAB NAV ===== -->
+        <div class="tabs">
+            <button class="active" onclick="openTab('permutasi')">Materi Permutasi</button>
+            <button onclick="openTab('kombinasi')">Materi Kombinasi</button>
+            <button onclick="openTab('kalkulator')">Kalkulator & Analisis</button>
         </div>
 
-        <div style="margin-top:8px;display:flex;gap:8px">
-          <button id="btn-analyze">Analisis Soal</button>
-          <button id="btn-analyze-calc">Analisis & Hitung</button>
-          <button id="btn-clear-analysis" type="button" class="muted">Bersihkan Analisis</button>
-        </div>
-        <div id="analysis-output" class="card mono hidden" style="margin-top:8px"></div>
-      </fieldset>
+        <!-- ===== TAB PERMUTASI ===== -->
+        <section id="permutasi" class="tab-content active materi">
+            <h2>1️⃣ Pengertian Permutasi</h2>
+            <p>
+                <strong>Permutasi</strong> adalah susunan atau pengaturan objek yang <em>memperhatikan urutan</em>.
+                Jika terdapat <em>n</em> objek dan diambil sebanyak <em>r</em> secara berurutan, maka rumusnya:
+            </p>
 
-      <div class="row">
-        <label>
-          n (jumlah elemen)
-          <input id="input-n" type="number" min="0" step="1" value="5" />
-        </label>
+            <div class="rumus">
+                P(n,r) = n! / (n − r)!
+            </div>
 
-        <label>
-          r (jumlah pemilihan)
-          <input id="input-r" type="number" min="0" step="1" value="3" />
-        </label>
-      </div>
+            <p>
+                Contoh: Dari 5 siswa, berapa cara memilih ketua dan wakil?
+                Karena posisi berbeda, maka menggunakan permutasi.
+            </p>
+        </section>
 
-      <fieldset>
-        <legend>Jenis perhitungan</legend>
-        <label><input type="radio" name="mode" value="nPr" checked /> Permutasi (nPr)</label>
-        <label><input type="radio" name="mode" value="nCr" /> Kombinasi (nCr)</label>
-        <label><input type="radio" name="mode" value="repetition_permutation" /> Permutasi dengan pengulangan (n^r)</label>
-        <label><input type="radio" name="mode" value="repetition_combination" /> Kombinasi dengan pengulangan (C(n+r-1, r))</label>
-        <label><input type="radio" name="mode" value="circular" /> Permutasi sirkular ((n-1)!)</label>
-        <label><input type="radio" name="mode" value="multinomial" /> Permutasi dengan objek tak dibedakan (multinomial)</label>
-      </fieldset>
+        <!-- ===== TAB KOMBINASI ===== -->
+        <section id="kombinasi" class="tab-content materi">
+            <h2>2️⃣ Pengertian Kombinasi</h2>
+            <p>
+                <strong>Kombinasi</strong> adalah cara memilih objek tanpa memperhatikan urutan.
+                Rumusnya:
+            </p>
 
-      <div id="multinomial-controls" class="hidden">
-        <label>
-          Masukkan jumlah tiap tipe (dipisah koma). Contoh: 2,2,1  → total harus = n
-          <input id="multinomial-counts" type="text" placeholder="2,2,1" />
-        </label>
-      </div>
+            <div class="rumus">
+                C(n,r) = n! / (r!(n − r)!)
+            </div>
 
-      <div class="options">
-        <label><input id="list-results" type="checkbox" /> Tampilkan daftar hasil (batas 5000 item)</label>
-        <label>Daftar elemen (dipisah koma). Contoh: A,B,C,D,E
-          <input id="elements-list" type="text" placeholder="A,B,C,D,E" />
-        </label>
-        <label>
-          Batas tampilan daftar
-          <input id="list-limit" type="number" min="1" step="1" value="200" />
-        </label>
-      </div>
+            <p>
+                Contoh: Dari 5 siswa, berapa cara memilih 3 orang untuk tim?
+                Urutan tidak penting → kombinasi.
+            </p>
+        </section>
 
-      <div class="actions">
-        <button id="btn-calc">Hitung</button>
-        <button id="btn-clear">Bersihkan</button>
-      </div>
-    </section>
+        <!-- ===== TAB KALKULATOR (DIPERBARUI) ===== -->
+        <section id="kalkulator" class="tab-content">
+            <div class="calculator-header">
+                <h3><b>Kalkulator Permutasi & Kombinasi</b></h3>
+                <p class="subtitle">Hitung berbagai jenis permutasi dan kombinasi dengan analisis lengkap</p>
+            </div>
 
-    <section class="results">
-      <h2>Hasil</h2>
-      <div id="output-summary" class="card"></div>
-      <div id="output-steps" class="card mono"></div>
-      <div id="output-list" class="card"></div>
-    </section>
+            <!-- Input Parameter -->
+            <div class="param-grid">
+                <div class="param-group">
+                    <div class="param-label">n (jumlah elemen)</div>
+                    <div class="param-input">
+                        <input type="number" id="input-n" value="0" min="0">
+                        <div class="param-description">Masukkan jumlah total elemen</div>
+                    </div>
+                </div>
+                <div class="param-group">
+                    <div class="param-label">r (jumlah terpilih)</div>
+                    <div class="param-input">
+                        <input type="number" id="input-r" value="0" min="0">
+                        <div class="param-description">Masukkan jumlah yang dipilih</div>
+                    </div>
+                </div>
+            </div>
 
-    <footer>
-      <small>Dibuat: Kalkulator kombinatorik dengan BigInt, pembatalan faktorial, dan opsi listing. Batasi listing untuk mencegah browser freeze.</small>
-    </footer>
-      <small>© 2025 - Materi Permutasi & Kombinasi | UNIVERSITAS TRUNOJOYO MADURA</small>
-  </footer>
-  </main>
+            <!-- Mode Selection -->
+            <div class="mode-selection">
+                <div class="mode-option">
+                    <input type="radio" id="mode-npr" name="mode" value="nPr" checked>
+                    <label for="mode-npr">Permutasi (nPr)</label>
+                </div>
+                <div class="mode-option">
+                    <input type="radio" id="mode-ncr" name="mode" value="nCr">
+                    <label for="mode-ncr">Kombinasi (nCr)</label>
+                </div>
+                <div class="mode-option">
+                    <input type="radio" id="mode-rep-perm" name="mode" value="repetition_permutation">
+                    <label for="mode-rep-perm">Permutasi dengan pengulangan</label>
+                </div>
+                <div class="mode-option">
+                    <input type="radio" id="mode-rep-comb" name="mode" value="repetition_combination">
+                    <label for="mode-rep-comb">Kombinasi dengan pengulangan</label>
+                </div>
+                <div class="mode-option">
+                    <input type="radio" id="mode-circular" name="mode" value="circular">
+                    <label for="mode-circular">Permutasi sirkular</label>
+                </div>
+                <div class="mode-option">
+                    <input type="radio" id="mode-multinomial" name="mode" value="multinomial">
+                    <label for="mode-multinomial">Multinomial</label>
+                </div>
+            </div>
 
-  <script src="script.js"></script>
+            <!-- LATIHAN SOAL - INPUT USER -->
+            <div class="latihan-input">
+                <h4>📝 Latihan Soal (Input Manual)</h4>
+                <div class="soal-input-group">
+                    <textarea id="user-soal" placeholder="Masukkan soal latihan di sini. Contoh: 'Dari 8 siswa, berapa cara memilih 3 orang untuk menjadi pengurus kelas?'"></textarea>
+                    <button class="analyze-btn" id="btn-analyze">
+                        <span>🔍</span> Analisis & Hitung
+                    </button>
+                </div>
+            </div>
+
+            <!-- UJI CEPAT SECTION -->
+            <div class="uji-cepat">
+                <h4>⚡ Uji Cepat (Contoh Soal)</h4>
+                <div class="soal-grid">
+                    <button class="soal-btn" data-n="8" data-r="3" data-mode="nCr">
+                        8 siswa pilih 3 (kombinasi)
+                    </button>
+                    <button class="soal-btn" data-n="6" data-r="4" data-mode="nPr">
+                        6 huruf (permutasi)
+                    </button>
+                    <button class="soal-btn" data-n="4" data-r="4" data-mode="circular">
+                        4 orang melingkar (sirkular)
+                    </button>
+                    <button class="soal-btn" data-n="5" data-r="3" data-mode="repetition_permutation">
+                        Permutasi dengan pengulangan
+                    </button>
+                    <button class="soal-btn" data-n="5" data-r="0" data-mode="multinomial" data-multi="2,2,1">
+                        Multinomial (2,2,1)
+                    </button>
+                    <button class="soal-btn" data-n="10" data-r="4" data-mode="nCr">
+                        10 item pilih 4
+                    </button>
+                </div>
+            </div>
+
+            <!-- Multinomial Input (Hidden by Default) -->
+            <div id="multinomial-controls" class="hidden">
+                <div class="element-input">
+                    <label>Jumlah tiap kategori (pisahkan dengan koma, contoh: 2,2,1)</label>
+                    <input type="text" id="multinomial-counts" placeholder="2,2,1">
+                </div>
+            </div>
+
+            <!-- Element Input -->
+            <div class="element-input">
+                <label>Daftar elemen (opsional, pisahkan dengan koma)</label>
+                <textarea id="elements-list" placeholder="Contoh: A,B,C,D,E,F,G,H"></textarea>
+            </div>
+
+            <!-- Options -->
+            <div class="options-row">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="list-results" checked>
+                    <label for="list-results">Tampilkan daftar hasil</label>
+                </div>
+                <div class="limit-input">
+                    <label>Batas tampilan:</label>
+                    <input type="number" id="list-limit" value="200" min="1" max="1000">
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="calc-btn primary" id="btn-calc">
+                    <span>🧮</span> Hitung Sekarang
+                </button>
+                <button class="calc-btn secondary" id="btn-clear">
+                    <span>🔄</span> Reset Semua
+                </button>
+            </div>
+
+            <!-- Result Display -->
+            <div class="result-display hidden" id="result-display">
+                <div class="result-header">
+                    <div class="result-title">Hasil Perhitungan</div>
+                    <div class="result-mode" id="result-mode-label">Mode: -</div>
+                </div>
+                
+                <div class="result-main">
+                    <div class="result-number" id="result-number">0</div>
+                    <div class="result-label" id="result-type">Masukkan nilai untuk menghitung</div>
+                </div>
+                
+                <div class="result-formula" id="formula-display">
+                    Formula akan muncul di sini
+                </div>
+                
+                <!-- ANALISIS SECTION -->
+                <div class="analisis-section hidden" id="analisis-section">
+                    <h4>Analisis Langkah-Langkah</h4>
+                    <div class="analisis-content" id="analisis-content">
+                        Analisis akan muncul di sini
+                    </div>
+                </div>
+                
+                <div class="result-list hidden" id="result-list">
+                    <!-- List items will be added here -->
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            © Universitas Trunojoyo Madura - Kalkulator Matematika Diskrit
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
