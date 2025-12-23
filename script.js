@@ -11,13 +11,19 @@ document.addEventListener('DOMContentLoaded', function () {
     // Setup event listeners untuk mode radio
     const modeRadios = document.querySelectorAll('input[name="mode"]');
     const multinomialControls = document.getElementById('multinomial-controls');
+    const sameElementsControls = document.getElementById('same-elements-controls');
 
     modeRadios.forEach(radio => {
         radio.addEventListener('change', function () {
             if (this.value === 'multinomial') {
                 multinomialControls.classList.remove('hidden');
+                sameElementsControls.classList.add('hidden');
+            } else if (this.value === 'same_elements') {
+                sameElementsControls.classList.remove('hidden');
+                multinomialControls.classList.add('hidden');
             } else {
                 multinomialControls.classList.add('hidden');
+                sameElementsControls.classList.add('hidden');
             }
         });
     });
@@ -26,10 +32,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const soalBtns = document.querySelectorAll('.soal-btn');
     soalBtns.forEach(btn => {
         btn.addEventListener('click', function () {
-            const n = this.getAttribute('data-n');
-            const r = this.getAttribute('data-r');
+            const n = parseInt(this.getAttribute('data-n')) || 0;
+            const r = parseInt(this.getAttribute('data-r')) || 0;
             const mode = this.getAttribute('data-mode');
             const multi = this.getAttribute('data-multi');
+            const same = this.getAttribute('data-same');
 
             // Update input values
             document.getElementById('input-n').value = n;
@@ -38,16 +45,15 @@ document.addEventListener('DOMContentLoaded', function () {
             // Update radio button
             document.querySelectorAll('input[name="mode"]').forEach(radio => {
                 radio.checked = radio.value === mode;
+                // Trigger change event untuk update controls
+                if (radio.checked) radio.dispatchEvent(new Event('change'));
             });
 
-            // Update multinomial controls and value
-            if (mode === 'multinomial') {
-                multinomialControls.classList.remove('hidden');
-                if (multi) {
-                    document.getElementById('multinomial-counts').value = multi;
-                }
-            } else {
-                multinomialControls.classList.add('hidden');
+            // Update controls based on mode
+            if (mode === 'multinomial' && multi) {
+                document.getElementById('multinomial-counts').value = multi;
+            } else if (mode === 'same_elements' && same) {
+                document.getElementById('same-elements-counts').value = same;
             }
 
             // Update elements list based on soal
@@ -88,21 +94,21 @@ document.addEventListener('DOMContentLoaded', function () {
     const soalTextarea = document.getElementById('user-soal');
     soalTextarea.addEventListener('focus', function() {
         if (!this.value.trim()) {
-            this.placeholder = "Contoh:\n1. Dari 8 siswa, pilih 3 orang untuk menjadi pengurus?\n2. Ada 5 huruf A, B, C, D, E. Berapa banyak susunan 3 huruf?\n3. 4 orang duduk melingkar, berapa cara?\n4. 5 bola dengan 2 merah, 2 biru, 1 hijau, berapa cara menyusun?\n5. P(6,3) atau C(10,4)\n6. 6 angka dibuat password 3 digit\n7. 2,2,1 distribusi multinomial";
+            this.placeholder = "Contoh:\n1. Dari 8 siswa, pilih 3 orang untuk menjadi pengurus?\n2. Ada 5 huruf A, B, C, D, E. Berapa banyak susunan 3 huruf?\n3. Berapa susunan kata 'MAMA'? (unsur sama)\n4. 4 orang duduk melingkar, berapa cara?\n5. 5 bola dengan 2 merah, 2 biru, 1 hijau, berapa cara menyusun?\n6. P(6,3) atau C(10,4)\n7. 6 angka dibuat password 3 digit\n8. 2,2,1 distribusi multinomial";
         }
     });
 
     // Update contoh tombol uji cepat dengan variasi lebih banyak
     const soalBtnsUpdated = document.querySelectorAll('.soal-btn');
     const soalExamples = [
-        { text: "Dari 8 siswa pilih 3 pengurus", n: 8, r: 3, mode: "nCr" },
+        { text: "8 siswa pilih 3 pengurus", n: 8, r: 3, mode: "nCr" },
         { text: "6 huruf susun 4 huruf", n: 6, r: 4, mode: "nPr" },
+        { text: "Kata 'MAMA' (unsur sama)", n: 4, r: 0, mode: "same_elements", same: "2,2" },
         { text: "4 orang duduk melingkar", n: 4, r: 0, mode: "circular" },
         { text: "Password 3 digit dari 5 angka", n: 5, r: 3, mode: "repetition_permutation" },
         { text: "5 bola: 2M,2B,1H (multinomial)", n: 5, r: 0, mode: "multinomial", multi: "2,2,1" },
         { text: "10 item ambil 4 item", n: 10, r: 4, mode: "nCr" },
-        { text: "P(7,3) permutasi", n: 7, r: 3, mode: "nPr" },
-        { text: "C(9,2) kombinasi", n: 9, r: 2, mode: "nCr" }
+        { text: "Permutasi 7: 3,2,2 (unsur sama)", n: 7, r: 0, mode: "same_elements", same: "3,2,2" }
     ];
 
     // Update tombol dengan contoh yang lebih baik
@@ -115,8 +121,11 @@ document.addEventListener('DOMContentLoaded', function () {
             btn.setAttribute('data-mode', example.mode);
             if (example.multi) {
                 btn.setAttribute('data-multi', example.multi);
+            } else if (example.same) {
+                btn.setAttribute('data-same', example.same);
             } else {
                 btn.removeAttribute('data-multi');
+                btn.removeAttribute('data-same');
             }
         }
     });
@@ -131,6 +140,7 @@ function analyzeProblem(soalText) {
         r: null,
         mode: null,
         multiCounts: null,
+        sameCounts: null,
         keywords: [],
         detectedPattern: null,
         confidence: 0
@@ -143,77 +153,7 @@ function analyzeProblem(soalText) {
     console.log('🔍 Analisis soal:', soalText);
     console.log('📝 Teks bersih:', cleanText);
 
-    // 1. EKSTRAKSI ANGKA dengan konteks yang lebih baik
-    const angkaPatterns = [
-        // Pola "dari X, pilih Y" atau "X siswa, pilih Y"
-        /dari\s+(\d+)\s*(?:siswa|orang|mahasiswa|anggota|item|bola|huruf|angka)?(?:\s*,\s*|\s+)pilih\s+(\d+)/gi,
-        /(\d+)\s*(?:siswa|orang|mahasiswa|anggota|item|bola|huruf|angka)(?:\s*,\s*|\s+)pilih\s+(\d+)/gi,
-        /(\d+)\s*(?:siswa|orang|mahasiswa|anggota|item|bola|huruf|angka)\s+diambil\s+(\d+)/gi,
-        /(\d+)\s*(?:siswa|orang|mahasiswa|anggota|item|bola|huruf|angka)\s+dipilih\s+(\d+)/gi,
-        
-        // Pola "ambil X dari Y"
-        /ambil\s+(\d+)\s+dari\s+(\d+)/gi,
-        /pilih\s+(\d+)\s+dari\s+(\d+)/gi,
-        /pilih\s+(\d+)\s+orang\s+dari\s+(\d+)/gi,
-        
-        // Pola standar angka
-        /(\d+)\s+dan\s+(\d+)/gi,
-        /angka\s+(\d+)\s+dan\s+(\d+)/gi
-    ];
-
-    let angkaTerdeteksi = false;
-    for (let pattern of angkaPatterns) {
-        const match = cleanText.match(pattern);
-        if (match && match[1] && match[2]) {
-            // Untuk pola "pilih X dari Y", urutannya terbalik: X = r, Y = n
-            if (pattern.toString().includes('pilih') || pattern.toString().includes('ambil')) {
-                result.r = parseInt(match[1]);
-                result.n = parseInt(match[2]);
-            } else {
-                result.n = parseInt(match[1]);
-                result.r = parseInt(match[2]);
-            }
-            angkaTerdeteksi = true;
-            console.log(`✅ Angka terdeteksi: n=${result.n}, r=${result.r}`);
-            break;
-        }
-    }
-
-    // Jika belum terdeteksi pola kontekstual, cari semua angka
-    if (!angkaTerdeteksi) {
-        const semuaAngka = cleanText.match(/\d+/g);
-        if (semuaAngka) {
-            const nums = semuaAngka.map(Number);
-            console.log('🔢 Semua angka ditemukan:', nums);
-            
-            // Logika pemilihan angka yang lebih cerdas
-            if (nums.length === 1) {
-                result.n = nums[0];
-                // Coba tebak r dari konteks
-                if (cleanText.includes('pilih 2') || cleanText.includes('ambil 2') || cleanText.includes('dua')) {
-                    result.r = 2;
-                } else if (cleanText.includes('pilih 3') || cleanText.includes('ambil 3') || cleanText.includes('tiga')) {
-                    result.r = 3;
-                } else if (cleanText.includes('pilih 4') || cleanText.includes('ambil 4') || cleanText.includes('empat')) {
-                    result.r = 4;
-                }
-            } else if (nums.length >= 2) {
-                // Ambil 2 angka terbesar sebagai kandidat
-                const sortedNums = [...nums].sort((a, b) => b - a);
-                result.n = sortedNums[0]; // Angka terbesar = n
-                result.r = sortedNums[1]; // Angka kedua = r
-                
-                // Kecuali jika ada petunjuk lain
-                if (cleanText.includes('huruf') || cleanText.includes('angka')) {
-                    // Untuk huruf/angka, biasanya n > r
-                    result.n = Math.max(nums[0], nums[1]);
-                    result.r = Math.min(nums[0], nums[1]);
-                }
-            }
-        }
-    }
-
-    // 2. DETEKSI MODE DENGAN PRIORITAS TINGGI (pola matematika eksplisit)
+    // 1. DETEKSI MODE DENGAN PRIORITAS TINGGI (pola matematika eksplisit)
     const mathPatterns = [
         // Pola P(n,r) atau C(n,r) - PRIORITAS TERTINGGI
         { pattern: /p\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)/gi, mode: 'nPr', confidence: 100 },
@@ -222,32 +162,115 @@ function analyzeProblem(soalText) {
         { pattern: /kombinasi\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)/gi, mode: 'nCr', confidence: 100 },
         
         // Pola nPr atau nCr
-        { pattern: /(\d+)\s*p\s*(\d+)/gi, mode: 'nPr', confidence: 90 },
-        { pattern: /(\d+)\s*c\s*(\d+)/gi, mode: 'nCr', confidence: 90 },
+        { pattern: /(\d+)\s*p\s*(\d+)/gi, mode: 'nPr', confidence: 95 },
+        { pattern: /(\d+)\s*c\s*(\d+)/gi, mode: 'nCr', confidence: 95 },
         
         // Pola pangkat (permutasi dengan pengulangan)
         { pattern: /(\d+)\s*\^\s*(\d+)/gi, mode: 'repetition_permutation', confidence: 95 },
         
         // Pola faktorial eksplisit
-        { pattern: /(\d+)\s*!\s*\/\s*(\d+)\s*!/gi, mode: 'nPr', confidence: 85 },
-        { pattern: /(\d+)\s*!\s*\/\s*\(\s*(\d+)\s*!\s*\*\s*(\d+)\s*!\s*\)/gi, mode: 'nCr', confidence: 85 },
+        { pattern: /(\d+)\s*!\s*\/\s*(\d+)\s*!/gi, mode: 'nPr', confidence: 90 },
+        { pattern: /(\d+)\s*!\s*\/\s*\(\s*(\d+)\s*!\s*\*\s*(\d+)\s*!\s*\)/gi, mode: 'nCr', confidence: 90 },
     ];
 
     for (let mathPattern of mathPatterns) {
         const match = cleanText.match(mathPattern.pattern);
-        if (match) {
+        if (match && match[1] && match[2]) {
             result.mode = mathPattern.mode;
             result.confidence = mathPattern.confidence;
             result.detectedPattern = mathPattern.pattern.toString();
             
             // Update angka jika ditemukan dalam pola
-            if (match[1] && match[2]) {
-                result.n = parseInt(match[1]);
-                result.r = parseInt(match[2]);
-            }
+            result.n = parseInt(match[1]);
+            result.r = parseInt(match[2]);
             
             console.log(`🎯 Pola matematika terdeteksi: ${result.mode} (confidence: ${result.confidence})`);
             break;
+        }
+    }
+
+    // 2. EKSTRAKSI ANGKA dengan konteks yang lebih baik (HANYA jika belum ada angka dari pola)
+    if (!result.n || !result.r) {
+        console.log('🔢 Mencari angka dari teks...');
+        
+        // Cari semua angka
+        const semuaAngka = cleanText.match(/\d+/g);
+        if (semuaAngka) {
+            const nums = semuaAngka.map(Number);
+            console.log('Angka ditemukan:', nums);
+            
+            // Deteksi angka untuk mode khusus dulu
+            const angkaKhususPatterns = [
+                // Pola "dari n, pilih r" atau "n siswa, pilih r"
+                { pattern: /dari\s+(\d+)\s*(?:siswa|orang|mahasiswa|anggota|item|bola|huruf|angka)?(?:\s*,\s*|\s+)pilih\s+(\d+)/gi, type: 'nCr' },
+                { pattern: /(\d+)\s*(?:siswa|orang|mahasiswa|anggota|item|bola|huruf|angka)(?:\s*,\s*|\s+)pilih\s+(\d+)/gi, type: 'nCr' },
+                
+                // Pola "ambil r dari n"
+                { pattern: /ambil\s+(\d+)\s+dari\s+(\d+)/gi, type: 'nCr' },
+                { pattern: /pilih\s+(\d+)\s+dari\s+(\d+)/gi, type: 'nCr' },
+                
+                // Pola "susun r dari n" atau "r huruf dari n"
+                { pattern: /susun\s+(\d+)\s+(?:huruf|angka|digit)\s+dari\s+(\d+)/gi, type: 'nPr' },
+                { pattern: /(\d+)\s+(?:huruf|angka|digit)\s+susun\s+(\d+)/gi, type: 'nPr' },
+                
+                // Pola untuk password/digit
+                { pattern: /(\d+)\s+(?:digit|angka)\s+dari\s+(\d+)/gi, type: 'repetition_permutation' },
+                { pattern: /password\s+(\d+)\s+digit\s+dari\s+(\d+)/gi, type: 'repetition_permutation' },
+            ];
+            
+            let angkaDitemukan = false;
+            for (let pattern of angkaKhususPatterns) {
+                const match = cleanText.match(pattern.pattern);
+                if (match && match[1] && match[2]) {
+                    if (pattern.type === 'repetition_permutation') {
+                        // Untuk password: r digit dari n angka
+                        result.r = parseInt(match[1]);
+                        result.n = parseInt(match[2]);
+                    } else {
+                        // Untuk pola lain: n ... r
+                        result.n = parseInt(match[1]);
+                        result.r = parseInt(match[2]);
+                    }
+                    
+                    if (!result.mode) {
+                        result.mode = pattern.type;
+                        result.confidence = 80;
+                    }
+                    angkaDitemukan = true;
+                    console.log(`✅ Pola angka terdeteksi: n=${result.n}, r=${result.r}, mode=${pattern.type}`);
+                    break;
+                }
+            }
+            
+            // Jika tidak ada pola spesifik, gunakan logika sederhana
+            if (!angkaDitemukan && nums.length >= 2) {
+                // Jika ada kata "pilih" atau "ambil" → kombinasi, jika "susun" → permutasi
+                if (cleanText.includes('pilih') || cleanText.includes('ambil') || cleanText.includes('memilih')) {
+                    result.mode = 'nCr';
+                    result.confidence = 70;
+                } else if (cleanText.includes('susun') || cleanText.includes('urutan') || cleanText.includes('menyusun')) {
+                    result.mode = 'nPr';
+                    result.confidence = 70;
+                }
+                
+                // Ambil 2 angka pertama (biasanya n dan r dalam urutan yang benar)
+                result.n = nums[0];
+                result.r = nums[1];
+                
+                // KOREKSI: Jika r > n untuk permutasi/kombinasi, mungkin terbalik
+                if (result.n && result.r && (result.mode === 'nPr' || result.mode === 'nCr')) {
+                    if (result.n < result.r) {
+                        console.log('⚠️ Koreksi: n < r, menukar...');
+                        const temp = result.n;
+                        result.n = result.r;
+                        result.r = temp;
+                    }
+                }
+            } else if (!angkaDitemukan && nums.length === 1) {
+                result.n = nums[0];
+                // r bisa 0 untuk beberapa mode
+                result.r = 0;
+            }
         }
     }
 
@@ -267,11 +290,37 @@ function analyzeProblem(soalText) {
             result.r = null;
             console.log('🌀 Mode: Permutasi Sirkular');
         }
+        // PERMUTASI UNSUR SAMA
+        else if (cleanText.includes('unsur sama') || 
+                 cleanText.includes('huruf sama') || 
+                 cleanText.includes('elemen sama') ||
+                 (cleanText.includes('kata') && /\d+[,\s]+\d+/.test(cleanText)) ||
+                 (cleanText.includes('permutasi') && cleanText.includes('sama')) ||
+                 cleanText.includes('mama') || cleanText.includes('mississippi')) {
+            result.mode = 'same_elements';
+            result.confidence = 85;
+            result.keywords.push('unsur sama');
+            
+            // Cari pola angka untuk frekuensi
+            const angkaPattern = cleanText.match(/(\d+)[,\s]+(\d+)(?:[,\s]+(\d+))?(?:[,\s]+(\d+))?/);
+            if (angkaPattern) {
+                const counts = [];
+                for (let i = 1; i < angkaPattern.length; i++) {
+                    if (angkaPattern[i]) counts.push(parseInt(angkaPattern[i]));
+                }
+                if (counts.length > 0) {
+                    result.sameCounts = counts;
+                    result.n = counts.reduce((a, b) => a + b, 0);
+                    result.r = null;
+                }
+            }
+            console.log('♻️ Mode: Permutasi Unsur Sama');
+        }
         // MULTINOMIAL
         else if (cleanText.includes('multinomial') || 
                  (cleanText.includes('bagi') && cleanText.includes('kelompok')) ||
                  (cleanText.includes('warna') && cleanText.includes('jenis')) ||
-                 /\d+[,\s]+\d+[,\s]+\d+/.test(cleanText)) {
+                 (cleanText.includes('distribusi') && /\d+[,\s]+\d+[,\s]+\d+/.test(cleanText))) {
             result.mode = 'multinomial';
             result.confidence = 85;
             result.keywords.push('multinomial');
@@ -293,7 +342,8 @@ function analyzeProblem(soalText) {
         else if ((cleanText.includes('ulang') || cleanText.includes('repeat') || cleanText.includes('boleh')) && 
                  (cleanText.includes('digit') || cleanText.includes('angka') || 
                   cleanText.includes('password') || cleanText.includes('kata sandi') ||
-                  cleanText.includes('kode') || cleanText.includes('pin'))) {
+                  cleanText.includes('kode') || cleanText.includes('pin') ||
+                  cleanText.includes('bilangan'))) {
             result.mode = 'repetition_permutation';
             result.confidence = 80;
             result.keywords.push('pengulangan', 'permutasi');
@@ -302,7 +352,8 @@ function analyzeProblem(soalText) {
         // KOMBINASI DENGAN PENGULANGAN
         else if ((cleanText.includes('ulang') || cleanText.includes('repeat') || cleanText.includes('boleh')) && 
                  (cleanText.includes('permen') || cleanText.includes('buah') || 
-                  cleanText.includes('makanan') || cleanText.includes('jenis'))) {
+                  cleanText.includes('makanan') || cleanText.includes('jenis') ||
+                  cleanText.includes('rasa'))) {
             result.mode = 'repetition_combination';
             result.confidence = 80;
             result.keywords.push('pengulangan', 'kombinasi');
@@ -321,7 +372,10 @@ function analyzeProblem(soalText) {
                  (cleanText.includes('jabatan') && cleanText.includes('posisi')) ||
                  // Konteks pemenang
                  (cleanText.includes('juara') && (cleanText.includes('pertama') || cleanText.includes('kedua'))) ||
-                 (cleanText.includes('pemenang') && cleanText.includes('hadiah'))) {
+                 (cleanText.includes('pemenang') && cleanText.includes('hadiah')) ||
+                 // Huruf/angka
+                 (cleanText.includes('huruf') && cleanText.includes('susun')) ||
+                 (cleanText.includes('angka') && cleanText.includes('susun'))) {
             result.mode = 'nPr';
             result.confidence = 75;
             result.keywords.push('permutasi');
@@ -349,54 +403,29 @@ function analyzeProblem(soalText) {
         }
     }
 
-    // 4. LOGIKA FALLBACK DAN VALIDASI AKHIR
-    if (!result.mode && result.n && result.r) {
-        // Jika ada n dan r tapi mode tidak terdeteksi
-        if (cleanText.includes('susun') || cleanText.includes('urut')) {
-            result.mode = 'nPr';
-            result.confidence = 60;
-            console.log('⚡ Fallback: Default ke permutasi (ada kata "susun/urut")');
-        } else if (cleanText.includes('pilih') || cleanText.includes('ambil')) {
-            result.mode = 'nCr';
-            result.confidence = 60;
-            console.log('⚡ Fallback: Default ke kombinasi (ada kata "pilih/ambil")');
-        } else {
-            // Default: jika r <= n → permutasi, jika r > n → kombinasi
-            if (result.r <= result.n) {
-                result.mode = 'nPr';
-                result.confidence = 50;
-                console.log('⚡ Fallback: Default ke permutasi (r <= n)');
-            } else {
-                result.mode = 'nCr';
-                result.confidence = 50;
-                console.log('⚡ Fallback: Default ke kombinasi (r > n)');
-            }
-        }
-    }
-
-    // 5. KOREKSI TERBALIK n dan r
-    // Jika n < r untuk permutasi/kombinasi biasa, mungkin terbalik
-    if ((result.mode === 'nPr' || result.mode === 'nCr') && result.n && result.r) {
+    // 4. VALIDASI DAN KOREKSI AKHIR
+    // Koreksi untuk n dan r yang terbalik
+    if ((result.mode === 'nPr' || result.mode === 'nCr') && result.n !== null && result.r !== null) {
         if (result.n < result.r) {
-            console.warn('⚠️ n < r, mungkin terbalik. Menukar n dan r...');
+            console.warn('⚠️ Koreksi: n < r untuk permutasi/kombinasi, menukar...');
             const temp = result.n;
             result.n = result.r;
             result.r = temp;
         }
     }
-
-    // 6. VALIDASI AKHIR
-    if (result.mode === 'circular') {
-        result.r = null; // Sirkular tidak menggunakan r
+    
+    // Pastikan r = 0 untuk mode yang tidak membutuhkan r
+    if (result.mode === 'circular' || result.mode === 'same_elements' || result.mode === 'multinomial') {
+        result.r = 0;
     }
     
-    if (result.mode === 'multinomial' && result.multiCounts && !result.n) {
-        result.n = result.multiCounts.reduce((a, b) => a + b, 0);
-        result.r = null;
+    // Jika n = 0, set ke null untuk menghindari confusion
+    if (result.n === 0) {
+        result.n = null;
     }
     
-    // Pastikan r ada untuk permutasi/kombinasi
-    if ((result.mode === 'nPr' || result.mode === 'nCr') && !result.r && result.n) {
+    // Jika r = 0 untuk permutasi/kombinasi, coba tebak
+    if ((result.mode === 'nPr' || result.mode === 'nCr') && result.n && (!result.r || result.r === 0)) {
         // Tebak r dari konteks
         if (cleanText.includes('2')) result.r = 2;
         else if (cleanText.includes('3')) result.r = 3;
@@ -410,7 +439,9 @@ function analyzeProblem(soalText) {
         r: result.r,
         mode: result.mode,
         confidence: result.confidence,
-        keywords: result.keywords
+        keywords: result.keywords,
+        sameCounts: result.sameCounts,
+        multiCounts: result.multiCounts
     });
     
     return result;
@@ -418,17 +449,30 @@ function analyzeProblem(soalText) {
 
 // Fungsi untuk menampilkan detail analisis
 function showAnalisisDetails(analisis) {
-    const details = `
+    let detailsHTML = `
         <div class="analisis-details" style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid #3b82f6;">
             <h5 style="margin-top: 0; color: #3b82f6;">🔍 Detail Analisis:</h5>
             <ul style="margin-bottom: 0; padding-left: 20px;">
-                <li><strong>n (jumlah elemen):</strong> ${analisis.n || 'Tidak terdeteksi'}</li>
+                <li><strong>n (jumlah elemen):</strong> ${analisis.n !== null ? analisis.n : 'Tidak terdeteksi'}</li>
                 <li><strong>r (elemen terpilih):</strong> ${analisis.r !== null ? analisis.r : 'Tidak digunakan'}</li>
                 <li><strong>Mode:</strong> ${analisis.mode || 'Tidak terdeteksi'}</li>
                 <li><strong>Tingkat Kepercayaan:</strong> ${analisis.confidence || 0}%</li>
                 <li><strong>Kata kunci terdeteksi:</strong> ${analisis.keywords.length > 0 ? analisis.keywords.join(', ') : 'Tidak terdeteksi'}</li>
-                ${analisis.detectedPattern ? `<li><strong>Pola terdeteksi:</strong> ${analisis.detectedPattern}</li>` : ''}
-                ${analisis.multiCounts ? `<li><strong>Kategori Multinomial:</strong> ${analisis.multiCounts.join(', ')}</li>` : ''}
+    `;
+    
+    if (analisis.detectedPattern) {
+        detailsHTML += `<li><strong>Pola terdeteksi:</strong> ${analisis.detectedPattern}</li>`;
+    }
+    
+    if (analisis.sameCounts) {
+        detailsHTML += `<li><strong>Frekuensi Unsur Sama:</strong> ${analisis.sameCounts.join(', ')}</li>`;
+    }
+    
+    if (analisis.multiCounts) {
+        detailsHTML += `<li><strong>Kategori Multinomial:</strong> ${analisis.multiCounts.join(', ')}</li>`;
+    }
+    
+    detailsHTML += `
             </ul>
         </div>
     `;
@@ -440,7 +484,7 @@ function showAnalisisDetails(analisis) {
         if (existingDetails) {
             existingDetails.remove();
         }
-        analisisContent.innerHTML = details + analisisContent.innerHTML;
+        analisisContent.innerHTML = detailsHTML + analisisContent.innerHTML;
     }
 }
 
@@ -459,15 +503,21 @@ function analyzeAndCalculate() {
     // Analisis soal
     const analisis = analyzeProblem(soalText);
 
-    // Update input values
+    // Update input values (HANDLE n = 0)
     if (analisis.n !== null) {
         document.getElementById('input-n').value = analisis.n;
         console.log(`✅ n diatur ke: ${analisis.n}`);
+    } else {
+        document.getElementById('input-n').value = '0';
+        console.log(`⚠️ n tidak terdeteksi, diatur ke 0`);
     }
 
     if (analisis.r !== null) {
         document.getElementById('input-r').value = analisis.r;
         console.log(`✅ r diatur ke: ${analisis.r}`);
+    } else {
+        document.getElementById('input-r').value = '0';
+        console.log(`⚠️ r tidak terdeteksi, diatur ke 0`);
     }
 
     // Update mode
@@ -479,14 +529,15 @@ function analyzeAndCalculate() {
                 modeUpdated = true;
                 console.log(`✅ Mode diatur ke: ${analisis.mode} (confidence: ${analisis.confidence}%)`);
                 
-                if (analisis.mode === 'multinomial') {
-                    document.getElementById('multinomial-controls').classList.remove('hidden');
-                    if (analisis.multiCounts) {
-                        document.getElementById('multinomial-counts').value = analisis.multiCounts.join(',');
-                        console.log(`✅ Kategori multinomial: ${analisis.multiCounts.join(',')}`);
-                    }
-                } else {
-                    document.getElementById('multinomial-controls').classList.add('hidden');
+                // Trigger change event untuk update controls
+                radio.dispatchEvent(new Event('change'));
+                
+                if (analisis.mode === 'multinomial' && analisis.multiCounts) {
+                    document.getElementById('multinomial-counts').value = analisis.multiCounts.join(',');
+                    console.log(`✅ Kategori multinomial: ${analisis.multiCounts.join(',')}`);
+                } else if (analisis.mode === 'same_elements' && analisis.sameCounts) {
+                    document.getElementById('same-elements-counts').value = analisis.sameCounts.join(',');
+                    console.log(`✅ Frekuensi unsur sama: ${analisis.sameCounts.join(',')}`);
                 }
             }
         });
@@ -496,7 +547,7 @@ function analyzeAndCalculate() {
     if (!modeUpdated) {
         const msg = 'Mode tidak terdeteksi secara otomatis. Silakan pilih mode secara manual.';
         console.warn('⚠️ ' + msg);
-        alert(msg + '\n\nTips: Gunakan format yang jelas seperti "Dari 8 siswa, pilih 3 orang" atau "P(5,3)".');
+        alert(msg + '\n\nTips: Gunakan format yang jelas seperti:\n- "Dari 8 siswa, pilih 3 orang"\n- "5 huruf susun 3 huruf"\n- "Berapa susunan kata MAMA?"\n- "P(5,3)" atau "C(8,2)"');
     } else if (analisis.confidence < 70) {
         console.warn(`⚠️ Confidence rendah: ${analisis.confidence}%. Periksa hasil analisis.`);
     }
@@ -518,7 +569,7 @@ function analyzeAndCalculate() {
     showAnalisisDetails(analisis);
 }
 
-// ====== FUNGSI LAIN YANG TETAP SAMA ======
+// ====== FUNGSI LAIN YANG DIPERBAIKI ======
 
 // Fungsi untuk menampilkan placeholder hasil
 function showResultPlaceholder() {
@@ -569,8 +620,21 @@ function calculateWithAnalisis(analisisData = null) {
     const mode = document.querySelector('input[name="mode"]:checked').value;
     const showList = document.getElementById('list-results').checked;
 
-    // Validasi input
-    if (n === 0 && r === 0 && mode !== 'circular') {
+    // Validasi input - DIPERBAIKI untuk handle n/r = 0
+    const modesTanpaR = ['circular', 'same_elements', 'multinomial'];
+    const modesButuhN = ['circular', 'same_elements', 'multinomial', 'repetition_permutation', 'repetition_combination'];
+    
+    if (n === 0 && modesButuhN.includes(mode)) {
+        // Untuk mode yang butuh n, beri pesan khusus
+        document.getElementById('result-number').textContent = '0';
+        document.getElementById('result-type').textContent = 'Masukkan nilai n terlebih dahulu';
+        document.getElementById('formula-display').textContent = `Mode ${mode} membutuhkan nilai n`;
+        document.getElementById('analisis-section').classList.add('hidden');
+        document.getElementById('result-display').classList.remove('hidden');
+        return;
+    }
+    
+    if (n === 0 && r === 0 && !modesTanpaR.includes(mode)) {
         document.getElementById('result-number').textContent = '0';
         document.getElementById('result-type').textContent = 'Masukkan nilai n dan r terlebih dahulu';
         document.getElementById('formula-display').textContent = 'Silakan masukkan nilai untuk menghitung';
@@ -595,6 +659,16 @@ function calculateWithAnalisis(analisisData = null) {
                     '❌ <strong>Error:</strong> r tidak boleh lebih besar dari n untuk permutasi',
                     `n = ${n}, r = ${r}`,
                     `r (${r}) > n (${n}) tidak valid untuk permutasi`
+                ];
+            } else if (r === 0) {
+                result = 1;
+                modeName = `Permutasi (${n}P0)`;
+                formula = `P(${n},0) = 1 (khusus untuk r=0)`;
+                steps = [
+                    `📌 <strong>Kasus khusus:</strong> r = 0`,
+                    `Tidak ada elemen yang dipilih`,
+                    `Hanya ada 1 cara (tidak memilih apapun)`,
+                    `Hasil = 1`
                 ];
             } else {
                 result = nPr(n, r);
@@ -629,6 +703,16 @@ function calculateWithAnalisis(analisisData = null) {
                     `n = ${n}, r = ${r}`,
                     `r (${r}) > n (${n}) tidak valid untuk kombinasi`
                 ];
+            } else if (r === 0) {
+                result = 1;
+                modeName = `Kombinasi (${n}C0)`;
+                formula = `C(${n},0) = 1 (khusus untuk r=0)`;
+                steps = [
+                    `📌 <strong>Kasus khusus:</strong> r = 0`,
+                    `Tidak ada elemen yang dipilih`,
+                    `Hanya ada 1 cara (tidak memilih apapun)`,
+                    `Hasil = 1`
+                ];
             } else {
                 result = nCr(n, r);
                 modeName = `Kombinasi (${n}C${r})`;
@@ -651,19 +735,84 @@ function calculateWithAnalisis(analisisData = null) {
                 ];
             }
             break;
+        case 'same_elements':
+            const sameCountsInput = document.getElementById('same-elements-counts').value;
+            const sameCounts = sameCountsInput.split(',').map(c => parseInt(c.trim())).filter(c => !isNaN(c));
+            if (sameCounts.length > 0) {
+                const sum = sameCounts.reduce((a, b) => a + b, 0);
+                if (sum !== n) {
+                    result = 0;
+                    modeName = 'Permutasi Unsur Sama';
+                    formula = `${n}! / (${sameCounts.map(c => `${c}!`).join(' × ')}) = Tidak valid`;
+                    steps = [
+                        '❌ <strong>Error:</strong> Jumlah frekuensi tidak sama dengan n',
+                        `n = ${n}`,
+                        `Jumlah frekuensi = ${sameCounts.join(' + ')} = ${sum}`,
+                        `${sum} ≠ ${n} (tidak valid)`
+                    ];
+                } else {
+                    result = multinomial(n, sameCounts);
+                    modeName = 'Permutasi Unsur Sama';
+                    formula = `${n}! / (${sameCounts.map(c => `${c}!`).join(' × ')}) = ${result.toLocaleString()}`;
+                    steps = [
+                        `📌 <strong>Langkah 1:</strong> Identifikasi jumlah total dan frekuensi unsur`,
+                        `n (total elemen) = ${n}`,
+                        `Frekuensi: ${sameCounts.map((c, i) => `Unsur ${i + 1}: ${c} kali`).join(', ')}`,
+                        `📌 <strong>Langkah 2:</strong> Gunakan rumus permutasi unsur sama`,
+                        `n! / (p! × q! × r! × ...)`,
+                        `📌 <strong>Langkah 3:</strong> Hitung faktorial`,
+                        `${n}! = ${factorial(n).toLocaleString()}`,
+                        ...sameCounts.map((c, i) => `Unsur ${i + 1}: ${c}! = ${factorial(c).toLocaleString()}`),
+                        `📌 <strong>Langkah 4:</strong> Hitung penyebut`,
+                        `Penyebut = ${sameCounts.map(c => factorial(c)).join(' × ')} = ${sameCounts.reduce((acc, c) => acc * factorial(c), 1).toLocaleString()}`,
+                        `📌 <strong>Langkah 5:</strong> Bagi untuk mendapatkan hasil`,
+                        `Hasil = ${factorial(n).toLocaleString()} / ${sameCounts.reduce((acc, c) => acc * factorial(c), 1).toLocaleString()} = ${result.toLocaleString()}`
+                    ];
+                }
+            } else {
+                result = 0;
+                modeName = 'Permutasi Unsur Sama';
+                formula = 'Masukkan frekuensi unsur';
+                steps = [
+                    '⚠️ <strong>Peringatan:</strong> Belum memasukkan frekuensi unsur',
+                    'Contoh format: 2,2,1 (artinya: ada 2 unsur A, 2 unsur B, 1 unsur C)'
+                ];
+            }
+            break;
         case 'repetition_permutation':
-            result = Math.pow(n, r);
-            modeName = 'Permutasi dengan Pengulangan';
-            formula = `${n}^${r} = ${result.toLocaleString()}`;
-            steps = [
-                `📌 <strong>Langkah 1:</strong> Identifikasi nilai n dan r`,
-                `n (jumlah elemen) = ${n}`,
-                `r (panjang susunan) = ${r}`,
-                `📌 <strong>Langkah 2:</strong> Gunakan rumus permutasi dengan pengulangan`,
-                `n^r = ${n}^${r}`,
-                `📌 <strong>Langkah 3:</strong> Hitung perpangkatan`,
-                `${n}^${r} = ${Array(r).fill(n).join(' × ')} = ${result.toLocaleString()}`
-            ];
+            if (n === 0) {
+                result = 0;
+                modeName = 'Permutasi dengan Pengulangan';
+                formula = `${n}^${r} = 0`;
+                steps = [
+                    '❌ <strong>Error:</strong> n tidak boleh 0 untuk permutasi dengan pengulangan',
+                    `n = ${n}, r = ${r}`,
+                    'Tidak ada elemen untuk disusun'
+                ];
+            } else if (r === 0) {
+                result = 1;
+                modeName = 'Permutasi dengan Pengulangan';
+                formula = `${n}^0 = 1`;
+                steps = [
+                    `📌 <strong>Kasus khusus:</strong> r = 0`,
+                    `Tidak ada elemen yang disusun`,
+                    `Hanya ada 1 cara (string kosong)`,
+                    `Hasil = 1`
+                ];
+            } else {
+                result = Math.pow(n, r);
+                modeName = 'Permutasi dengan Pengulangan';
+                formula = `${n}^${r} = ${result.toLocaleString()}`;
+                steps = [
+                    `📌 <strong>Langkah 1:</strong> Identifikasi nilai n dan r`,
+                    `n (jumlah elemen) = ${n}`,
+                    `r (panjang susunan) = ${r}`,
+                    `📌 <strong>Langkah 2:</strong> Gunakan rumus permutasi dengan pengulangan`,
+                    `n^r = ${n}^${r}`,
+                    `📌 <strong>Langkah 3:</strong> Hitung perpangkatan`,
+                    `${n}^${r} = ${Array(r).fill(n).join(' × ')} = ${result.toLocaleString()}`
+                ];
+            }
             break;
         case 'repetition_combination':
             if (n === 0 && r > 0) {
@@ -674,6 +823,16 @@ function calculateWithAnalisis(analisisData = null) {
                     '❌ <strong>Error:</strong> n tidak boleh 0 jika r > 0',
                     `n = ${n}, r = ${r}`,
                     'Tidak ada elemen untuk dipilih (n = 0)'
+                ];
+            } else if (r === 0) {
+                result = 1;
+                modeName = 'Kombinasi dengan Pengulangan';
+                formula = `C(${n}+0-1, 0) = 1`;
+                steps = [
+                    `📌 <strong>Kasus khusus:</strong> r = 0`,
+                    `Tidak ada elemen yang dipilih`,
+                    `Hanya ada 1 cara (tidak memilih apapun)`,
+                    `Hasil = 1`
                 ];
             } else {
                 result = nCr(n + r - 1, r);
@@ -788,6 +947,7 @@ function calculateWithAnalisis(analisisData = null) {
 // Fungsi matematika
 function factorial(n) {
     if (n < 0) return 0;
+    if (n === 0) return 1;
     let result = 1;
     for (let i = 2; i <= n; i++) {
         result *= i;
@@ -797,6 +957,7 @@ function factorial(n) {
 
 function nPr(n, r) {
     if (r > n) return 0;
+    if (r === 0) return 1;
     let result = 1;
     for (let i = 0; i < r; i++) {
         result *= (n - i);
@@ -806,6 +967,7 @@ function nPr(n, r) {
 
 function nCr(n, r) {
     if (r > n) return 0;
+    if (r === 0 || r === n) return 1;
     if (r > n - r) r = n - r;
     let result = 1;
     for (let i = 1; i <= r; i++) {
@@ -911,11 +1073,13 @@ function clearCalculator() {
     document.getElementById('input-r').value = '0';
     document.getElementById('elements-list').value = '';
     document.getElementById('multinomial-counts').value = '';
+    document.getElementById('same-elements-counts').value = '';
     document.getElementById('user-soal').value = '';
     document.getElementById('list-results').checked = true;
     document.getElementById('list-limit').value = '200';
     document.getElementById('mode-npr').checked = true;
     document.getElementById('multinomial-controls').classList.add('hidden');
+    document.getElementById('same-elements-controls').classList.add('hidden');
 
     // Reset semua tombol uji cepat
     document.querySelectorAll('.soal-btn').forEach(btn => {
