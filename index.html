@@ -4,17 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Permutasi & Kombinasi</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <header>
             <h1>Permutasi, Kombinasi & Kalkulator</h1>
             <a href="/" title="Beranda" class="logo-link">
-        <img id="site-logo" class="site-logo" src="tif1.png" alt="Logo" />
-    </a>
+                <img id="site-logo" class="site-logo" src="tif1.png" alt="Logo" />
+            </a>
         </header>
-    </header>
+
         <!-- ===== TAB NAV ===== -->
         <div class="tabs">
             <button class="active" onclick="openTab('permutasi')">Materi Permutasi</button>
@@ -34,9 +34,20 @@
                 P(n,r) = n! / (n − r)!
             </div>
 
+            <h3>Permutasi dengan Unsur Sama</h3>
             <p>
-                Contoh: Dari 5 siswa, berapa cara memilih ketua dan wakil?
-                Karena posisi berbeda, maka menggunakan permutasi.
+                Jika terdapat <em>n</em> objek dengan beberapa unsur yang sama, dimana ada <em>p</em> unsur jenis pertama, 
+                <em>q</em> unsur jenis kedua, <em>r</em> unsur jenis ketiga, dan seterusnya, maka rumusnya:
+            </p>
+
+            <div class="rumus">
+                P(n; p,q,r) = n! / (p! × q! × r! × ...)
+            </div>
+
+            <p>
+                Contoh: Berapa banyak susunan dari kata "MAMA"?<br>
+                n = 4 huruf total, p = 2 huruf M, q = 2 huruf A<br>
+                P(4; 2,2) = 4! / (2! × 2!) = 6 cara
             </p>
         </section>
 
@@ -83,7 +94,7 @@
                 </div>
             </div>
 
-            <!-- Mode Selection -->
+            <!-- Mode Selection (DIPERBARUI: 7 MODE) -->
             <div class="mode-selection">
                 <div class="mode-option">
                     <input type="radio" id="mode-npr" name="mode" value="nPr" checked>
@@ -92,6 +103,10 @@
                 <div class="mode-option">
                     <input type="radio" id="mode-ncr" name="mode" value="nCr">
                     <label for="mode-ncr">Kombinasi (nCr)</label>
+                </div>
+                <div class="mode-option">
+                    <input type="radio" id="mode-same-elements" name="mode" value="same_elements">
+                    <label for="mode-same-elements">Permutasi Unsur Sama</label>
                 </div>
                 <div class="mode-option">
                     <input type="radio" id="mode-rep-perm" name="mode" value="repetition_permutation">
@@ -115,14 +130,14 @@
             <div class="latihan-input">
                 <h4>📝 Latihan Soal (Input Manual)</h4>
                 <div class="soal-input-group">
-                    <textarea id="user-soal" placeholder="Masukkan soal latihan di sini. Contoh: 'Dari 8 siswa, berapa cara memilih 3 orang untuk menjadi pengurus kelas?'"></textarea>
+                    <textarea id="user-soal" placeholder="Masukkan soal latihan di sini. Contoh: 'Dari 8 siswa, berapa cara memilih 3 orang untuk menjadi pengurus kelas?' atau 'Berapa susunan kata "MAMA"?'"></textarea>
                     <button class="analyze-btn" id="btn-analyze">
                         <span>🔍</span> Analisis & Hitung
                     </button>
                 </div>
             </div>
 
-            <!-- UJI CEPAT SECTION -->
+            <!-- UJI CEPAT SECTION (DIPERBARUI) -->
             <div class="uji-cepat">
                 <h4>⚡ Uji Cepat (Contoh Soal)</h4>
                 <div class="soal-grid">
@@ -132,11 +147,14 @@
                     <button class="soal-btn" data-n="6" data-r="4" data-mode="nPr">
                         6 huruf (permutasi)
                     </button>
+                    <button class="soal-btn" data-n="4" data-r="0" data-mode="same_elements" data-same="2,2">
+                        Kata "MAMA" (unsur sama)
+                    </button>
                     <button class="soal-btn" data-n="4" data-r="4" data-mode="circular">
                         4 orang melingkar (sirkular)
                     </button>
                     <button class="soal-btn" data-n="5" data-r="3" data-mode="repetition_permutation">
-                        Permutasi dengan pengulangan
+                        Password 3 digit
                     </button>
                     <button class="soal-btn" data-n="5" data-r="0" data-mode="multinomial" data-multi="2,2,1">
                         Multinomial (2,2,1)
@@ -144,6 +162,18 @@
                     <button class="soal-btn" data-n="10" data-r="4" data-mode="nCr">
                         10 item pilih 4
                     </button>
+                    <button class="soal-btn" data-n="7" data-r="0" data-mode="same_elements" data-same="3,2,2">
+                        Permutasi 7: 3,2,2
+                    </button>
+                </div>
+            </div>
+
+            <!-- Permutasi Unsur Sama Input (Hidden by Default) -->
+            <div id="same-elements-controls" class="hidden">
+                <div class="element-input">
+                    <label>Frekuensi unsur sama (pisahkan dengan koma, contoh: 2,2,1)</label>
+                    <input type="text" id="same-elements-counts" placeholder="2,2,1">
+                    <div class="param-description">Contoh: 2,2,1 artinya 2 unsur A, 2 unsur B, 1 unsur C</div>
                 </div>
             </div>
 
@@ -158,7 +188,7 @@
             <!-- Element Input -->
             <div class="element-input">
                 <label>Daftar elemen (opsional, pisahkan dengan koma)</label>
-                <textarea id="elements-list" placeholder="Contoh: A,B,C,D,E,F,G,H"></textarea>
+                <textarea id="elements-list" placeholder="Contoh: A,B,C,D,E,F,G,H atau M,A,M,A untuk kata 'MAMA'"></textarea>
             </div>
 
             <!-- Options -->
@@ -218,6 +248,6 @@
         </footer>
     </div>
 
-    <script src="script.js"></script>
+    <script src="scr"></script>
 </body>
 </html>
