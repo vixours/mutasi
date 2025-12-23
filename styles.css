@@ -136,6 +136,14 @@ header h1 {
     margin-bottom: 20px;
 }
 
+.materi h3 {
+    color: var(--text);
+    font-size: 1.3rem;
+    margin: 25px 0 15px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--border);
+}
+
 .materi p {
     line-height: 1.8;
     color: var(--text);
@@ -246,7 +254,7 @@ header h1 {
     flex-grow: 1;
 }
 
-/* Mode Selection Grid */
+/* Mode Selection Grid (DIPERBARUI untuk 7 mode) */
 .mode-selection {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -257,6 +265,12 @@ header h1 {
 @media (max-width: 768px) {
     .mode-selection {
         grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .mode-selection {
+        grid-template-columns: 1fr;
     }
 }
 
